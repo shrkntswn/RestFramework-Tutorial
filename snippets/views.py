@@ -14,6 +14,7 @@ from rest_framework import generics
 from django.contrib.auth.models import User
 from snippets.serializers import UserSerializer
 from rest_framework import permissions
+from snippets.permissions import IsOwnerOrReadOnly
 
 
 '''@csrf_exempt
@@ -108,7 +109,7 @@ def userList():
 
 def userDetail():
     queryset = user.objects.all()
-    serializer_class = UserSerializer'''
+    serializer_class = UserSerializer
 
 class SnippetList(APIView):
     """
@@ -158,7 +159,7 @@ class SnippetDetail(APIView):
         snippet.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-'''class SnippetList(mixins.ListModelMixin,
+class SnippetList(mixins.ListModelMixin,
                   mixins.CreateModelMixin,
                   generics.GenericAPIView):
     queryset = Snippet.objects.all()
@@ -189,12 +190,15 @@ class SnippetDetail(mixins.RetrieveModelMixin,
 class SnippetList(generics.ListCreateAPIView):
     queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
 
 class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly,
+                      IsOwnerOrReadOnly]
     queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
 
